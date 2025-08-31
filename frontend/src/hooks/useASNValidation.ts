@@ -11,13 +11,13 @@ export function useASNValidation() {
             setError(''); // clear previous errors
 
             const parsedData: ASNRequest = JSON.parse(asnData);
+
+            // call validation endpoint on backend
             const response = await fetch('http://localhost:8000/validate-asn', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(parsedData),
             });
-
-            console.log(response)
 
             // check response
             if (response.ok) {
