@@ -5,36 +5,44 @@ from .validators import ASNValidator
 import logging
 
 app = FastAPI(
-    title="ASN Validator API",
-    description="Validates ASNs against Dick's Sporting Goods compliance rules",
-    version="1.0.0"
+    title="ASN Validation",
+    description="Validates ASNs against Dicks Sporting Goods compliance rules",
 )
 
-# CORS for frontend integration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000"], # frontend url
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-validator = ASNValidator()
+# main validator obj
+validator = ASNValidator() 
 
-# FastAPI endpoint to validate an ASN
 
 @app.get("/")
 async def root():
-    return {"message": "ASN Validator API - Dick's Sporting Goods Compliance"}
+    return {"message": "Root endpoint hit"}
+
+# Key FastAPI features:
+# automatic JSON parsing
+# type validation
+# auto-generated documentation
 
 @app.post("/validate-asn", response_model=ValidationResponse)
 async def validate_asn(asn_data: ASNRequest):
-    """Validate ASN against the 3 core compliance rules"""
-    print(asn_data)
+    """Validate ASN against 3 compliance rules"""
+
+    # 1. Parses JSON into ASNRequest object
+    # 2. Validates all required fields exist
+    # 3. Calls your validation logic
+
+
     try:
         is_valid, errors, warnings = validator.validate_asn(asn_data)
-        print(is_valid, errors, warnings)
         
+        # 4. Returns JSON response
         return ValidationResponse(
             valid=is_valid,
             errors=errors,
@@ -43,6 +51,7 @@ async def validate_asn(asn_data: ASNRequest):
         )
         
     except Exception as e:
+        print(e)
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/sample-asn")

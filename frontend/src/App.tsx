@@ -1,127 +1,78 @@
 import React, { useState } from "react";
 import "./App.css";
-import { ASNRequest, ValidationResponse } from "./types";
+import { ValidationResponse } from "./types";
+import { Header } from "./components/Header";
+import { ControlPanel } from "./components/ControlPanel";
+import { ASNInput } from "./components/ASNInput";
+import { ValidationButton } from "./components/ValidationButton";
+import { ValidationResults } from "./components/ValidationResults";
+import { ErrorDisplay } from "./components/ErrorDisplay";
+import { useASNValidation } from "./hooks/useASNValidation";
+import { useSampleTemplate } from "./hooks/useSampleTemplate";
 
-function App() {
+export default function App() {
   const [asnData, setAsnData] = useState<string>("");
   const [validationResult, setValidationResult] =
     useState<ValidationResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string>("");
 
-  const validateASN = async () => {
+  const { validateASN, isLoading, error, clearError } = useASNValidation();
+  const { loadSampleTemplate } = useSampleTemplate();
+
+  async function handleValidation() {
     if (!asnData.trim()) {
-      setError("Please enter ASN data to validate");
+      clearError("Please enter ASN data to validate");
       return;
     }
 
     try {
-      setIsLoading(true);
-      setError("");
-
-      const parsedData: ASNRequest = JSON.parse(asnData);
-
-      const response = await fetch("http://localhost:8000/validate-asn", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(parsedData),
-      });
-
-      if (response.ok) {
-        const result: ValidationResponse = await response.json();
+      const result = await validateASN(asnData);
+      console.log(result);
+      if (result) {
         setValidationResult(result);
-      } else {
-        const errorData = await response.json();
-        setError(`Validation failed: ${errorData.detail || "Unknown error"}`);
       }
     } catch (err) {
-      if (err instanceof SyntaxError) {
-        setError("Invalid JSON format. Please check your input.");
-      } else {
-        setError(
-          `Error: ${err instanceof Error ? err.message : "Unknown error"}`
-        );
-      }
-    } finally {
-      setIsLoading(false);
+      console.log("Unexpected error: ", error);
     }
-  };
+  }
 
-  const loadSampleTemplate = async () => {
-    try {
-      const response = await fetch("http://localhost:8000/sample-asn");
-      if (response.ok) {
-        const data = await response.json();
-        setAsnData(JSON.stringify(data.template, null, 2));
-        setValidationResult(null);
-        setError("");
-      }
-    } catch (err) {
-      console.error("Failed to fetch sample template:", err);
+  async function handleLoadTemplate() {
+    const data = await loadSampleTemplate();
+    if (data) {
+      setAsnData(JSON.stringify(data, null, 2));
+      setValidationResult(null);
+      clearError();
     }
-  };
+  }
+
+  function handleClearForm() {
+    setAsnData("");
+    setValidationResult(null);
+    clearError();
+  }
 
   return (
     <div className="App">
-      <header>
-        <h1>🚚 ASN Validator</h1>
-        <p>Dick's Sporting Goods Compliance Rules</p>
-      </header>
+      <Header />
 
-      <main>
-        <div>
-          <button onClick={loadSampleTemplate}>📋 Load Sample Template</button>
-          <button onClick={() => setAsnData("")}>🗑️ Clear</button>
-        </div>
+      <main className="App-main">
+        <ControlPanel
+          onLoadTemplate={handleLoadTemplate}
+          onClearForm={handleClearForm}
+          hasData={!!asnData}
+        />
 
-        <div>
-          <label>ASN Data (JSON):</label>
-          <textarea
-            value={asnData}
-            onChange={(e) => setAsnData(e.target.value)}
-            placeholder="Paste your ASN JSON data here..."
-            rows={15}
-          />
-        </div>
+        <ASNInput value={asnData} onChange={setAsnData} />
 
-        <button onClick={validateASN} disabled={isLoading}>
-          {isLoading ? "�� Validating..." : "✅ Validate ASN"}
-        </button>
+        <ValidationButton
+          onValidate={handleValidation}
+          isLoading={isLoading}
+          hasData={!!asnData.trim()}
+        />
 
-        {error && <div style={{ color: "red" }}>❌ {error}</div>}
+        <ErrorDisplay error={error} />
 
-        {validationResult && (
-          <div>
-            <h2>
-              {validationResult.valid
-                ? "✅ ASN is Valid!"
-                : "❌ ASN has Validation Errors"}
-            </h2>
-
-            {validationResult.errors.length > 0 && (
-              <div>
-                <h3>❌ Errors ({validationResult.errors.length})</h3>
-                {validationResult.errors.map((error, index) => (
-                  <div
-                    key={index}
-                    style={{
-                      margin: "10px 0",
-                      padding: "10px",
-                      border: "1px solid red",
-                    }}
-                  >
-                    <strong>{error.field}:</strong> {error.message}
-                    <br />
-                    <small>Impact: {error.impact}</small>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        {validationResult && <ValidationResults result={validationResult} />}
       </main>
     </div>
   );
 }
-
-export default App;
