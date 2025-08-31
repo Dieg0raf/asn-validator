@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
-import datetime
+from datetime import datetime
 
 class ASNItem(BaseModel):
     item_number: str
@@ -30,4 +30,4 @@ class ValidationResponse(BaseModel):
     valid: bool
     errors: List[ValidationError]
     warnings: List[ValidationError]
-    timestamp: datetime.datetime
+    timestamp: datetime

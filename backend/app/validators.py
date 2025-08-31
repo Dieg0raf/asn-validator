@@ -1,13 +1,5 @@
-import datetime
-print(datetime)
-print(dir(datetime))
-now = datetime.datetime.now()
-print(now)
-date_str = "2024-01-15"
-parsed_date = datetime.datetime.strptime(date_str, "%Y-%m-%d")
-print(parsed_date)
 from typing import List, Tuple
-# from datetime import datetime, timedelta
+from datetime import datetime
 import re
 from .models import ASNRequest, ValidationError
 
@@ -22,8 +14,8 @@ class ASNValidator:
         errors = []
         warnings = []
         
-        errors.append(self._validate_timing(asn))                      # Rule 1: validate timing
-        errors.append(self._validate_data_integrity(asn))              # Rule 2: validate data format  
+        errors.extend(self._validate_timing(asn))                      # Rule 1: validate timing
+        errors.extend(self._validate_data_integrity(asn))              # Rule 2: validate data format  
         errors.extend(self._validate_cross_document_consistency(asn))  # Rule 3: validate cross-document
         
         is_valid = len(errors) == 0
@@ -34,17 +26,18 @@ class ASNValidator:
         errors = []
         
         try:
-            ship_date = datetime.datetime.strptime(asn.ship_date, "%Y-%m-%d")
-            expected_delivery = datetime.datetime.strptime(asn.expected_delivery, "%Y-%m-%d")
-            
+            ship_date = datetime.strptime(asn.ship_date, "%Y-%m-%d")
+            expected_delivery = datetime.strptime(asn.expected_delivery, "%Y-%m-%d")
+
             # ship date cannot be in the past (ASN must be sent within 1 hour)
-            if ship_date.date() < datetime.datetime.now().date():
+            if ship_date.date() < datetime.now().date():
                 errors.append(ValidationError(
                     field="ship_date",
                     message="Ship date cannot be in the past - ASN must be sent within 1 hour of departure",
                     rule="timing_validation",
                     impact="$250 chargeback per shipment"
                 ))
+            
             
             # expected delivery must be after ship date
             if expected_delivery <= ship_date:
@@ -54,8 +47,10 @@ class ASNValidator:
                     rule="timing_validation",
                     impact="$250 chargeback per shipment"
                 ))
+            print(f"2nd check: {errors}")
                 
         except ValueError:
+            print("In here")
             errors.append(ValidationError(
                 field="dates",
                 message="Dates must be in YYYY-MM-DD format",
