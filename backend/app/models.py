@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
-from datetime import datetime
+import datetime
 
 class ASNItem(BaseModel):
     item_number: str
@@ -16,7 +16,7 @@ class ASNRequest(BaseModel):
     warehouse_code: str
     carrier: str
     tracking_number: Optional[str] = None
-    tms_shipment_id: str  # Critical for cross-document consistency
+    tms_shipment_id: str  # for cross-document 
     items: List[ASNItem]
     special_instructions: Optional[str] = None
 
@@ -24,10 +24,10 @@ class ValidationError(BaseModel):
     field: str
     message: str
     rule: str
-    impact: str  # Show the business impact
+    impact: str  # business impact
 
 class ValidationResponse(BaseModel):
     valid: bool
     errors: List[ValidationError]
     warnings: List[ValidationError]
-    timestamp: datetime
+    timestamp: datetime.datetime
