@@ -101,6 +101,7 @@ function Timestamp({ timestamp }: { timestamp: string }) {
   );
 }
 
+// TODO: Fix this function
 function CopyErrorsButton({ errors }: { errors: any[] }) {
   function handleCopyErrors() {
     const errorText = errors

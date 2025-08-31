@@ -52,7 +52,6 @@ async def validate_asn(asn_data: ASNRequest):
         )
         
     except Exception as e:
-        print(e)
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/sample-asn")
