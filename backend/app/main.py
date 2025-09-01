@@ -5,7 +5,7 @@ from .validators import DSGASNValidator
 from datetime import datetime
 
 app = FastAPI(
-    title="DSG ASN Validator API",
+    title="DSG (Dick's Sporting Goods) ASN Validator API",
     description="API for validating ASNs against DSG compliance rules",
 )
 
@@ -24,22 +24,19 @@ validator = DSGASNValidator()
 @app.post("/validate-asn", response_model=ValidationResponse)
 async def validate_asn(asn_data: ASNRequest):
     """
-    Validate an Advance Ship Notice against DSG compliance rules
-    
-    This endpoint validates ASN data against business rules from the DSG
-    Vendor Routing Guide, including:
-    - ASN timing requirements (within 1 hour of shipment close)
-    - Carton requirements (one PO per carton, size limits)
-    - UCC-128 labeling requirements (GS1 compliant SSCC (Serial Shipping Container Code))
-    - TMS routing requirements (shipment ID)
-    - Business rule validation (warehouse codes, PO formats)
+    Validate an ASN against DSG compliance rules
+        - ASN timing requirements (within 1 hour of shipment close)
+        - Carton requirements (one PO per carton, size limits)
+        - UCC-128 labeling requirements (GS1 compliant SSCC)
+        - TMS routing requirements (shipment ID)
+        - Business rule validation (warehouse codes, PO formats)
     """
     try:
 
-        # does validation (on valid ASNRequest obj)
+        # validation starts (on valid ASNRequest obj)
         is_valid, errors = validator.validate_asn(asn_data)
         
-        compliance_summary = {
+        asn_compliance_summary = {
             "total_cartons": len(asn_data.cartons),
             "total_items": sum(
                 sum(item.quantity for item in carton.items)
@@ -53,7 +50,7 @@ async def validate_asn(asn_data: ASNRequest):
             valid=is_valid,
             errors=errors,
             timestamp=datetime.now(),
-            compliance_summary=compliance_summary
+            compliance_summary=asn_compliance_summary
         )
 
         return response

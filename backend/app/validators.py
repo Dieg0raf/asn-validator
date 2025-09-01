@@ -7,8 +7,8 @@ class DSGASNValidator:
         
     def validate_asn(self, asn: ASNRequest) -> Tuple[bool, List[ValidationError], List[ValidationError], List[ValidationError]]:
         errors = []
-        
-        # validation rules
+
+        # validation rules checklist
         errors.extend(self._validate_dsg_timing(asn))
         errors.extend(self._validate_dsg_carton_rules(asn))
         errors.extend(self._validate_dsg_labeling(asn))
@@ -22,6 +22,7 @@ class DSGASNValidator:
         errors = []
         
         try:
+            # parse dates
             ship_date = datetime.strptime(asn.ship_date, "%Y-%m-%d")
             asn_submission_time = datetime.now()
             time_difference = asn_submission_time - ship_date
@@ -30,10 +31,9 @@ class DSGASNValidator:
             if time_difference.total_seconds() > 3600:
                 errors.append(ValidationError(
                     field="ship_date",
-                    message="DSG requirement: ASN must be sent within 1 hour after shipment closes",
+                    message="ASN must be sent within 1 hour after shipment closes",
                     rule="dsg_timing_requirement",
                     impact="ASN rejection + potential chargeback",
-                    severity="error"
                 ))
                 
         except ValueError:
@@ -42,15 +42,15 @@ class DSGASNValidator:
                 message="Dates must be in YYYY-MM-DD format",
                 rule="date_format",
                 impact="ASN rejection",
-                severity="error"
             ))
         
         return errors
     
     def _validate_dsg_carton_rules(self, asn: ASNRequest) -> List[ValidationError]:
-        """DSG carton requirements - one PO per carton, size limits"""
+        """DSG carton requirements"""
         errors = []
-        
+
+        # iterate over cartons
         for i, carton in enumerate(asn.cartons):
 
             # check for multiple PO numbers
@@ -58,32 +58,36 @@ class DSGASNValidator:
             for item in carton.items:
                 if hasattr(item, 'po_number'):
                     po_numbers.add(item.po_number)
-            
+                if item.po_number != carton.po_number: # PO numbers must match
+                    errors.append(ValidationError(
+                        field=f"cartons[{i}].items[{item.sku}].po_number",
+                        message="Item PO number must match carton PO number",
+                        rule="dsg_one_po_per_carton",
+                        impact="Carton rejection + processing delays",
+                    ))
+
             if len(po_numbers) > 1:
                 errors.append(ValidationError(
                     field=f"cartons[{i}].po_numbers",
-                    message="DSG requirement: Cartons must contain merchandise for only one purchase order",
+                    message="Cartons must contain merchandise for only one purchase order",
                     rule="dsg_one_po_per_carton",
                     impact="Carton rejection + processing delays",
-                    severity="error"
                 ))
 
             # check carton weight
             if carton.weight < 3:
                 errors.append(ValidationError(
                     field=f"cartons[{i}].weight",
-                    message="DSG requirement: Carton too light. Minimum: 3 lbs",
+                    message="Carton too light. Minimum: 3 lbs",
                     rule="dsg_carton_weight_minimum",
                     impact="Carton rejection + processing delays",
-                    severity="error"
                 ))
             if carton.weight > 50:
                 errors.append(ValidationError(
                     field=f"cartons[{i}].weight",
-                    message="DSG requirement: Carton too heavy. Maximum: 50 lbs",
+                    message="Carton too heavy. Maximum: 50 lbs",
                     rule="dsg_carton_weight_maximum",
                     impact="Carton rejection + processing delays",
-                    severity="error"
                 ))
 
             # check carton size requirements
@@ -91,26 +95,25 @@ class DSGASNValidator:
             if length < 9 or width < 6 or height < 3:
                 errors.append(ValidationError(
                     field=f"cartons[{i}].dimensions",
-                    message="DSG requirement: Carton too small. Minimum: 9x6x3 inches",
+                    message="Carton too small. Minimum: 9x6x3 inches",
                     rule="dsg_carton_size_minimum",
                     impact="Carton rejection + handling delays",
-                    severity="error"
                 ))
             
             if length > 48 or width > 30 or height > 30:
                 errors.append(ValidationError(
                     field=f"cartons[{i}].dimensions",
-                    message="DSG requirement: Carton too large. Maximum: 48x30x30 inches",
+                    message="Carton too large. Maximum: 48x30x30 inches",
                     rule="dsg_carton_size_maximum",
                     impact="Carton rejection + handling delays",
-                    severity="error"
                 ))
         return errors
     
     def _validate_dsg_labeling(self, asn: ASNRequest) -> List[ValidationError]:
         """DSG UCC-128 labeling requirements"""
         errors = []
-        
+
+        # iterate over cartons
         for i, carton in enumerate(asn.cartons):
             label = carton.ucc128_label
             
@@ -118,10 +121,9 @@ class DSGASNValidator:
             if not label.sscc.startswith('0'):
                 errors.append(ValidationError(
                     field=f"cartons[{i}].ucc128_label.sscc",
-                    message="DSG requirement: SSCC must start with 0 (GS1 compliant)",
+                    message="SSCC must start with 0 (GS1 compliant)",
                     rule="dsg_gs1_sscc_requirement",
                     impact="Label rejection + processing delays",
-                    severity="error"
                 ))
         
         return errors
@@ -135,10 +137,9 @@ class DSGASNValidator:
         if tms.cartons != len(asn.cartons):
             errors.append(ValidationError(
                 field="tms_routing.cartons",
-                message="DSG requirement: TMS carton count must match actual carton count",
+                message="TMS carton count must match actual carton count",
                 rule="dsg_tms_accuracy",
                 impact="Routing delays + processing issues",
-                severity="error"
             ))
         
         return errors

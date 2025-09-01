@@ -20,10 +20,10 @@ export function StepValidation({
       {validationResult && <ValidationReport data={validationResult} />}
       <div className="flex gap-2 mt-4">
         <button
-          className="px-4 py-2 rounded font-semibold bg-blue-600 text-white hover:bg-blue-700 transition"
+          className="px-4 py-2 rounded mx-auto font-semibold bg-blue-500 text-white hover:bg-blue-600 transition"
           onClick={handleBackToEdit}
         >
-          Back to Edit
+          {validationResult?.valid ? "Validate a new ASN" : "Back to Edit"}
         </button>
       </div>
     </div>

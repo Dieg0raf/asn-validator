@@ -3,14 +3,13 @@ import "./App.css";
 import { ValidationResponse, ASNRequest } from "./types";
 import { Header } from "./components/Header";
 import { useASNValidation } from "./hooks/useASNValidation";
-// import { sampleTemplates } from "./sampleTemplates";
+import { StepInput } from "./components/Steps/StepInput";
+import { StepPreview } from "./components/Steps/StepPreview";
+import { StepValidation } from "./components/Steps/StepValidation";
 import {
   validSampleTemplates,
   invalidSampleTemplates,
 } from "./sampleTemplates";
-import { StepInput } from "./components/Steps/StepInput";
-import { StepPreview } from "./components/Steps/StepPreview";
-import { StepValidation } from "./components/Steps/StepValidation";
 
 export default function App() {
   const [step, setStep] = useState(1);

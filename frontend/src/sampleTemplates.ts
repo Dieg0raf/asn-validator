@@ -1,11 +1,10 @@
-// Valid ASN samples that pass all validations
 export const validSampleTemplates = [
     // 1. Valid Multi-Carton ASN
     {
         vendor_id: "V12345",
         ship_date: "2025-12-20",
         expected_delivery: "2025-12-25",
-        warehouse_code: "PA1",
+        warehouse_code: "351",
         tms_routing: {
             shipment_id: "TMS12345678",
             ready_date: "2025-12-20",
@@ -71,7 +70,7 @@ export const validSampleTemplates = [
         vendor_id: "V98765",
         ship_date: "2025-12-19",
         expected_delivery: "2025-12-24",
-        warehouse_code: "TX1",
+        warehouse_code: "51",
         tms_routing: {
             shipment_id: "TMS87654321",
             ready_date: "2025-12-19",
@@ -109,15 +108,13 @@ export const validSampleTemplates = [
     }
 ];
 
-// Invalid ASN samples that fail specific DSG validation rules
-// These will pass FastAPI/Pydantic validation but fail DSG business logic
 export const invalidSampleTemplates = [
     // 1. Invalid: SSCC doesn't start with 0 (DSG GS1 requirement)
     {
         vendor_id: "V12346",
         ship_date: "2026-01-15", // Future date to avoid timing error
         expected_delivery: "2026-01-20",
-        warehouse_code: "PA1",
+        warehouse_code: "351",
         tms_routing: {
             shipment_id: "TMS12345679",
             ready_date: "2026-01-15",
@@ -159,7 +156,7 @@ export const invalidSampleTemplates = [
         vendor_id: "V12347",
         ship_date: "2026-01-16",
         expected_delivery: "2026-01-21",
-        warehouse_code: "TX1",
+        warehouse_code: "651",
         tms_routing: {
             shipment_id: "TMS12345680",
             ready_date: "2026-01-16",
@@ -196,12 +193,12 @@ export const invalidSampleTemplates = [
         ]
     },
 
-    // 3. Invalid: Multiple PO numbers in a single carton and invalid dimensions (DSG requirement)
+    // 3. Invalid: Multiple PO numbers in a single carton and invalid dimensions
     {
         vendor_id: "V12347",
         ship_date: "2026-01-16",
         expected_delivery: "2026-01-21",
-        warehouse_code: "TX1",
+        warehouse_code: "851",
         tms_routing: {
             shipment_id: "TMS12345680",
             ready_date: "2026-01-16",
@@ -249,7 +246,7 @@ export const invalidSampleTemplates = [
         vendor_id: "V12346",
         ship_date: "2025-01-15", // old date
         expected_delivery: "2025-01-20",
-        warehouse_code: "PA1",
+        warehouse_code: "CA2", // invalid warehouse code
         tms_routing: {
             shipment_id: "TMS12345679",
             ready_date: "2025-01-15",
@@ -278,6 +275,47 @@ export const invalidSampleTemplates = [
                         quantity: 25,
                         upc: "123456789014",
                         po_number: "DSG-2024-001235",
+                    }
+                ],
+                weight: 22.5,
+                dimensions: [18, 14, 8]
+            }
+        ]
+    },
+    // 5. Invalid: Item PO number does not match carton PO number
+    {
+        vendor_id: "V12350",
+        ship_date: "2026-01-15",
+        expected_delivery: "2026-01-20",
+        warehouse_code: "1051",
+        tms_routing: {
+            shipment_id: "TMS12345679",
+            ready_date: "2026-01-15",
+            cartons: 1,
+            cube: 12.3,
+            pallets: 1,
+            weight: 22.5
+        },
+        cartons: [
+            {
+                ucc128_label: {
+                    sscc: "023456789012345678",
+                    department_number: "10 - Athletic Apparel",
+                    vendor_name: "Vendor Name, 123 Vendor St, City, ST 12345",
+                    dsg_dc_name: "DSG - PA1, 456 DC St, City, PA 12345",
+                    po_number: "DSG-2024-001235",
+                    sort_letter: "A",
+                    upc: "123456789014",
+                    dc_store_number: "PA1"
+                },
+                po_number: "DSG-2024-001235",
+                items: [
+                    {
+                        sku: "ITEM003",
+                        description: "Running Shoes",
+                        quantity: 25,
+                        upc: "123456789014",
+                        po_number: "DSG-2024-001236", // different po_number to carton
                     }
                 ],
                 weight: 22.5,

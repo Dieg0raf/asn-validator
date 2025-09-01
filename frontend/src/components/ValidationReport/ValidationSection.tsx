@@ -16,8 +16,13 @@ export function ValidationSection({ title, errors }: ValidationSectionProps) {
       ) : (
         <ul className="list-disc pl-5 text-red-600">
           {errors.map((err, idx) => (
-            <li key={idx}>
-              <strong>{err.field}:</strong> {err.message}
+            <li key={idx} className="mb-2">
+              <div>
+                <strong>{err.field}:</strong> {err.message}
+              </div>
+              <div className="text-sm text-red-400 ml-2">
+                <strong>Impact:</strong> {err.impact}
+              </div>
             </li>
           ))}
         </ul>

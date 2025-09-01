@@ -84,7 +84,8 @@ class ASNRequest(BaseModel):
     
     @validator('warehouse_code')
     def validate_warehouse(cls, v):
-        valid_warehouses = {"PA1", "PA2", "CA1", "TX1", "GA1", "OH1", "IL1", "NY1"}
+        # Valid Dick's Sporting Goods distribution centers for receiving merchandise
+        valid_warehouses = {"351", "51", "651", "851", "1051"}
         if v not in valid_warehouses:
             raise ValueError(f'Invalid warehouse code. Must be one of: {", ".join(sorted(valid_warehouses))}')
         return v
@@ -94,7 +95,6 @@ class ValidationError(BaseModel):
     message: str = Field(..., description="Error message")
     rule: str = Field(..., description="Validation rule")
     impact: str = Field(..., description="Business impact")
-    severity: str = Field(..., description="Error severity")
 
 class ValidationResponse(BaseModel):
     valid: bool = Field(..., description="Validation result")
