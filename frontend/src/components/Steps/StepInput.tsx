@@ -1,22 +1,26 @@
-import { ASNInput } from "../ASNInput";
+import { ASNInput } from "./ASNInput";
 
 interface StepInputProps {
   asnData: string;
   setAsnData: (data: string) => void;
-  handleLoadTemplate: () => void;
+  handleValidLoadTemplate: () => void;
+  handleInvalidLoadTemplate: () => void;
   handleNextFromInput: () => void;
   handleClearForm: () => void;
-  isLoading: boolean;
+  isValidLoading: boolean;
+  isInvalidLoading: boolean;
   error: string | null;
 }
 
 export function StepInput({
   asnData,
   setAsnData,
-  handleLoadTemplate,
+  handleValidLoadTemplate,
+  handleInvalidLoadTemplate,
   handleNextFromInput,
   handleClearForm,
-  isLoading,
+  isValidLoading,
+  isInvalidLoading,
   error,
 }: StepInputProps) {
   return (
@@ -28,14 +32,73 @@ export function StepInput({
       <div className="flex gap-2 mt-4">
         <button
           className="px-4 py-2 rounded font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition"
-          disabled={isLoading}
-          onClick={handleLoadTemplate}
+          disabled={isValidLoading || isInvalidLoading}
+          onClick={handleValidLoadTemplate}
         >
-          Load Sample
+          {isValidLoading ? (
+            <span className="flex items-center">
+              <svg
+                className="animate-spin h-5 w-5 mr-2 text-gray-600"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  fill="none"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v8z"
+                />
+              </svg>
+              Loading...
+            </span>
+          ) : (
+            "Load Valid Sample"
+          )}
         </button>
+
+        <button
+          className="px-4 py-2 rounded font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition"
+          disabled={isValidLoading || isInvalidLoading}
+          onClick={handleInvalidLoadTemplate}
+        >
+          {isInvalidLoading ? (
+            <span className="flex items-center">
+              <svg
+                className="animate-spin h-5 w-5 mr-2 text-gray-600"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  fill="none"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v8z"
+                />
+              </svg>
+              Loading...
+            </span>
+          ) : (
+            "Load Invalid Sample"
+          )}
+        </button>
+
         <button
           className="px-4 py-2 rounded font-semibold bg-blue-500 text-white hover:bg-blue-600 transition"
-          disabled={isLoading}
+          disabled={isInvalidLoading || isValidLoading}
           onClick={handleNextFromInput}
         >
           Next: Preview
@@ -43,6 +106,7 @@ export function StepInput({
         <button
           className="px-4 py-2 rounded font-semibold bg-red-600 text-white hover:bg-red-700 transition"
           onClick={handleClearForm}
+          disabled={isInvalidLoading || isValidLoading}
         >
           Clear
         </button>

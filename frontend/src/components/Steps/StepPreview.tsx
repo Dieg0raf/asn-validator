@@ -1,4 +1,4 @@
-import { ASNPreview } from "../ASNPreview";
+import { ASNPreview } from "./ASNPreview";
 import { ASNRequest } from "../../types";
 
 interface StepPreviewProps {

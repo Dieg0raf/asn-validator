@@ -1,4 +1,4 @@
-import { ASNRequest } from "../types";
+import { ASNRequest } from "../../types";
 
 interface ASNPreviewProps {
   asn: ASNRequest;

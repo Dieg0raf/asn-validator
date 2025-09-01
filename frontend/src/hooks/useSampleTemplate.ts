@@ -10,6 +10,7 @@ export function useSampleTemplate() {
             console.log("Response state: ", response.status);
             if (response.ok) {
                 const data = await response.json();
+                console.log("Fetched sample template:", data);
                 return data.template;
             }
         } catch (err) {
