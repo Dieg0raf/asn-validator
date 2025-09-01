@@ -106,6 +106,5 @@ class ValidationError(BaseModel):
 class ValidationResponse(BaseModel):
     valid: bool = Field(..., description="Validation result")
     errors: List[ValidationError] = Field(default_factory=list)
-    warnings: List[ValidationError] = Field(default_factory=list)
     timestamp: datetime = Field(default_factory=datetime.now)
     compliance_summary: dict = Field(default_factory=dict)

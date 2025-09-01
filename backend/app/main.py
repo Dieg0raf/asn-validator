@@ -45,7 +45,7 @@ async def validate_asn(asn_data: ASNRequest):
         logger.info(f"Validating ASN for vendor {asn_data.vendor_id}")
 
         # does validation (on valid ASNRequest obj)
-        is_valid, errors, warnings= validator.validate_asn(asn_data)
+        is_valid, errors = validator.validate_asn(asn_data)
         
         compliance_summary = {
             "total_cartons": len(asn_data.cartons),
@@ -55,19 +55,17 @@ async def validate_asn(asn_data: ASNRequest):
             ),
             "total_weight": sum(carton.weight for carton in asn_data.cartons),
             "validation_errors": len(errors),
-            "validation_warnings": len(warnings),
         }
         
         response = ValidationResponse(
             valid=is_valid,
             errors=errors,
-            warnings=warnings,
             timestamp=datetime.now(),
             compliance_summary=compliance_summary
         )
-        
-        logger.info(f"ASN validation completed. Valid: {is_valid}, Errors: {len(errors)}, Warnings: {len(warnings)}")
-        
+
+        logger.info(f"ASN validation completed. Valid: {is_valid}, Errors: {len(errors)}")
+
         return response
         
     except Exception as e:

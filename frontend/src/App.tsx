@@ -73,6 +73,11 @@ export default function App() {
     clearError();
   }
 
+  function handleBackToEdit() {
+    setStep(1);
+    setValidationResult(null); // optional: clear previous results
+  }
+
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg ">
       <Header />
@@ -101,6 +106,7 @@ export default function App() {
         <StepValidation
           validationResult={validationResult}
           handleBack={handleBack}
+          handleBackToEdit={handleBackToEdit}
         />
       )}
     </div>

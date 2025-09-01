@@ -6,7 +6,7 @@ interface FinalStatusProps {
 export function FinalStatus({ valid, errorCount }: FinalStatusProps) {
   return (
     <div
-      className={`mt-6 p-4 rounded ${
+      className={`my-6 p-4 rounded ${
         valid ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
       }`}
     >

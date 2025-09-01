@@ -11,7 +11,6 @@ class DSGASNValidator:
         
     def validate_asn(self, asn: ASNRequest) -> Tuple[bool, List[ValidationError], List[ValidationError], List[ValidationError]]:
         errors = []
-        warnings = []
         
         # validation rules
         errors.extend(self._validate_dsg_timing(asn))
@@ -20,7 +19,7 @@ class DSGASNValidator:
         errors.extend(self._validate_dsg_tms_routing(asn))
         
         is_valid = len(errors) == 0
-        return is_valid, errors, warnings
+        return is_valid, errors
     
     def _validate_dsg_timing(self, asn: ASNRequest) -> List[ValidationError]:
         """DSG timing requirements"""

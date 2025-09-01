@@ -22,7 +22,7 @@ export function StepInput({
   return (
     <div className="bg-blue-50 border border-gray-200 shadow-sm rounded-lg p-6">
       <h2 className="text-xl font-bold mb-4 text-blue-600">
-        Step 1: Paste or Upload ASN JSON
+        Step 1: Paste ASN JSON (must match required format){" "}
       </h2>
       <ASNInput value={asnData} onChange={setAsnData} />
       <div className="flex gap-2 mt-4">
