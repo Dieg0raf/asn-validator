@@ -5,34 +5,30 @@ export function useASNValidation() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string>('');
 
-    async function validateASN(asnData: string): Promise<ValidationResponse | null> {
+    async function validateASN(asnData: string): Promise<{ status: number, result: ValidationResponse | null, error: string }> {
         try {
             setIsLoading(true);
             setError('');
-
             const parsedData: ASNRequest = JSON.parse(asnData);
-            const response = await fetch('http://localhost:8000/validate-asn', { // send validation request
+            const response = await fetch('http://localhost:8000/validate-asn', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(parsedData),
             });
 
             if (response.ok) {
-                return await response.json();
+                return { status: response.status, result: await response.json(), error: '' };
             }
 
             const errorData = await response.json();
             const errorMessage = getErrorMessage(response.status, errorData);
-
             setError(errorMessage);
-            return null;
+            return { status: response.status, result: null, error: errorMessage };
 
         } catch (err) {
-            // different types of errors
             const errorMessage = getErrorFromException(err);
             setError(errorMessage);
-            return null;
-
+            return { status: 0, result: null, error: errorMessage };
         } finally {
             setIsLoading(false);
         }
@@ -41,6 +37,7 @@ export function useASNValidation() {
     function getErrorMessage(status: number, errorData: any): string {
         switch (status) {
             case 422:
+                console.log("Catching 422");
                 return extractValidationError(errorData);
             case 500:
                 return errorData.detail || 'Server error occurred';

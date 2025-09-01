@@ -14,7 +14,7 @@ export function ASNInput({ value, onChange }: ASNInputProps) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Paste your ASN JSON data here..."
-        className="asn-textarea"
+        className="asn-textarea w-full p-2 border rounded"
         rows={15}
       />
     </div>
