@@ -8,7 +8,6 @@ This project is an ASN (Advanced Shipping Notice) Validator for Dick's Sporting 
 - Clear error and compliance reporting
 - Step-by-step UI with sample ASN templates
 - Modern, responsive design
-- Easy to run locally (no cloud dependencies)
 
 ---
 
