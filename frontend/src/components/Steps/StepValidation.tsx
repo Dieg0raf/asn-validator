@@ -11,8 +11,10 @@ export function StepValidation({
   handleBack,
 }: StepValidationProps) {
   return (
-    <>
-      <h2 className="text-xl font-bold mb-2">Step 3: Validation Report</h2>
+    <div className="bg-blue-50 border border-gray-200 shadow-sm rounded-lg p-6">
+      <h2 className="text-xl font-bold mb-4 text-blue-600">
+        Step 3: Validation Report
+      </h2>
       {validationResult && <ValidationReport data={validationResult} />}
       <div className="flex gap-2 mt-4">
         <button
@@ -22,6 +24,6 @@ export function StepValidation({
           Back
         </button>
       </div>
-    </>
+    </div>
   );
 }

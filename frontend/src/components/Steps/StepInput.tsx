@@ -20,8 +20,8 @@ export function StepInput({
   error,
 }: StepInputProps) {
   return (
-    <>
-      <h2 className="text-xl font-bold mb-2">
+    <div className="bg-blue-50 border border-gray-200 shadow-sm rounded-lg p-6">
+      <h2 className="text-xl font-bold mb-4 text-blue-600">
         Step 1: Paste or Upload ASN JSON
       </h2>
       <ASNInput value={asnData} onChange={setAsnData} />
@@ -34,7 +34,7 @@ export function StepInput({
           Load Sample
         </button>
         <button
-          className="px-4 py-2 rounded font-semibold bg-yellow-400 text-gray-900 hover:bg-yellow-500 transition"
+          className="px-4 py-2 rounded font-semibold bg-blue-500 text-white hover:bg-blue-600 transition"
           disabled={isLoading}
           onClick={handleNextFromInput}
         >
@@ -48,6 +48,6 @@ export function StepInput({
         </button>
       </div>
       {error && <div className="text-red-600 mt-2">{error}</div>}
-    </>
+    </div>
   );
 }

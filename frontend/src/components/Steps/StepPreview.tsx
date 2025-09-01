@@ -15,8 +15,10 @@ export function StepPreview({
   isLoading,
 }: StepPreviewProps) {
   return (
-    <>
-      <h2 className="text-xl font-bold mb-2">Step 2: Preview ASN</h2>
+    <div className="bg-blue-50 border border-gray-200 shadow-sm rounded-lg p-6">
+      <h2 className="text-xl font-bold mb-4 text-blue-600">
+        Step 2: Preview ASN
+      </h2>
       <ASNPreview asn={parsedASN} />
       <div className="flex gap-2 mt-4">
         <button
@@ -26,7 +28,7 @@ export function StepPreview({
           Back
         </button>
         <button
-          className="px-4 py-2 rounded font-semibold bg-yellow-400 text-gray-900 hover:bg-yellow-500 transition"
+          className="px-4 py-2 rounded font-semibold bg-blue-500 text-white hover:bg-blue-600 transition"
           onClick={handleValidation}
           disabled={isLoading}
         >
@@ -58,6 +60,6 @@ export function StepPreview({
           )}
         </button>
       </div>
-    </>
+    </div>
   );
 }
