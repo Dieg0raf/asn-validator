@@ -7,8 +7,8 @@ class DSGASNValidator:
         
     def validate_asn(self, asn: ASNRequest) -> Tuple[bool, List[ValidationError], List[ValidationError], List[ValidationError]]:
         errors = []
-        
-        # validation rules
+
+        # validation rules checklist
         errors.extend(self._validate_dsg_timing(asn))
         errors.extend(self._validate_dsg_carton_rules(asn))
         errors.extend(self._validate_dsg_labeling(asn))

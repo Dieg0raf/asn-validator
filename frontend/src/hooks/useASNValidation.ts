@@ -20,12 +20,14 @@ export function useASNValidation() {
                 return { status: response.status, result: await response.json(), error: '' };
             }
 
+            // Handle validation errors
             const errorData = await response.json();
             const errorMessage = getErrorMessage(response.status, errorData);
             setError(errorMessage);
             return { status: response.status, result: null, error: errorMessage };
 
         } catch (err) {
+            // Handle parsing errors
             const errorMessage = getErrorFromException(err);
             setError(errorMessage);
             return { status: 0, result: null, error: errorMessage };
@@ -36,7 +38,7 @@ export function useASNValidation() {
 
     function getErrorMessage(status: number, errorData: any): string {
         switch (status) {
-            case 422:
+            case 422: // pydantic input/format errors (returned before processing in backend)
                 return extractValidationError(errorData);
             case 500:
                 return errorData.detail || 'Server error occurred';
