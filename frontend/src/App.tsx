@@ -1,22 +1,33 @@
 import React, { useState } from "react";
 import "./App.css";
-import { ValidationResponse } from "./types";
+import { ValidationResponse, ASNRequest } from "./types";
 import { Header } from "./components/Header";
-import { ControlPanel } from "./components/ControlPanel";
-import { ASNInput } from "./components/ASNInput";
-import { ValidationButton } from "./components/ValidationButton";
-import { ValidationReport } from "./components/ValidationReport/ValidationReport";
-import { ErrorDisplay } from "./components/ErrorDisplay";
 import { useASNValidation } from "./hooks/useASNValidation";
 import { useSampleTemplate } from "./hooks/useSampleTemplate";
+import { StepInput } from "./components/Steps/StepInput";
+import { StepPreview } from "./components/Steps/StepPreview";
+import { StepValidation } from "./components/Steps/StepValidation";
 
 export default function App() {
+  const [step, setStep] = useState(1);
   const [asnData, setAsnData] = useState<string>("");
+  const [parsedASN, setParsedASN] = useState<ASNRequest | null>(null);
   const [validationResult, setValidationResult] =
     useState<ValidationResponse | null>(null);
 
   const { validateASN, isLoading, error, clearError } = useASNValidation();
   const { loadSampleTemplate } = useSampleTemplate();
+
+  function handleNextFromInput() {
+    try {
+      const parsed = JSON.parse(asnData);
+      setParsedASN(parsed);
+      setStep(2);
+      clearError();
+    } catch {
+      clearError("Invalid JSON format. Please check your input.");
+    }
+  }
 
   async function handleValidation() {
     if (!asnData.trim()) {
@@ -28,6 +39,7 @@ export default function App() {
       const validationResult = await validateASN(asnData);
       if (validationResult) {
         setValidationResult(validationResult);
+        setStep(3);
       }
     } catch (err) {
       console.log("Unexpected error: ", error);
@@ -43,6 +55,11 @@ export default function App() {
     }
   }
 
+  function handleBack() {
+    setStep((prev) => Math.max(1, prev - 1));
+    clearError();
+  }
+
   function handleClearForm() {
     setAsnData("");
     setValidationResult(null);
@@ -50,28 +67,32 @@ export default function App() {
   }
 
   return (
-    <div className="App">
+    <div className="max-w-2xl mx-auto p-4">
       <Header />
-
-      <main className="App-main">
-        <ControlPanel
-          onLoadTemplate={handleLoadTemplate}
-          onClearForm={handleClearForm}
-          hasData={!!asnData}
+      {step === 1 && (
+        <StepInput
+          asnData={asnData}
+          setAsnData={setAsnData}
+          handleLoadTemplate={handleLoadTemplate}
+          handleNextFromInput={handleNextFromInput}
+          error={error}
         />
+      )}
 
-        <ASNInput value={asnData} onChange={setAsnData} />
-
-        <ValidationButton
-          onValidate={handleValidation}
-          isLoading={isLoading}
-          hasData={!!asnData.trim()}
+      {step === 2 && parsedASN && (
+        <StepPreview
+          parsedASN={parsedASN}
+          handleBack={handleBack}
+          handleValidation={handleValidation}
         />
+      )}
 
-        <ErrorDisplay error={error} />
-
-        {validationResult && <ValidationReport data={validationResult} />}
-      </main>
+      {step === 3 && validationResult && (
+        <StepValidation
+          validationResult={validationResult}
+          handleBack={handleBack}
+        />
+      )}
     </div>
   );
 }
