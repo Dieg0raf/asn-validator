@@ -33,7 +33,7 @@ async def validate_asn(asn_data: ASNRequest):
     """
     try:
 
-        # does validation (on valid ASNRequest obj)
+        # validation starts (on valid ASNRequest obj)
         is_valid, errors = validator.validate_asn(asn_data)
         
         asn_compliance_summary = {
