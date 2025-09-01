@@ -15,7 +15,10 @@ export function StepValidation({
       <h2 className="text-xl font-bold mb-2">Step 3: Validation Report</h2>
       {validationResult && <ValidationReport data={validationResult} />}
       <div className="flex gap-2 mt-4">
-        <button className="btn" onClick={handleBack}>
+        <button
+          className="px-4 py-2 rounded font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition"
+          onClick={handleBack}
+        >
           Back
         </button>
       </div>

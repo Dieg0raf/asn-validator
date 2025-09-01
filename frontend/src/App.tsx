@@ -15,8 +15,14 @@ export default function App() {
   const [validationResult, setValidationResult] =
     useState<ValidationResponse | null>(null);
 
-  const { validateASN, isLoading, error, clearError } = useASNValidation();
-  const { loadSampleTemplate } = useSampleTemplate();
+  const {
+    validateASN,
+    isLoading: isLoadingValidation,
+    error,
+    clearError,
+  } = useASNValidation();
+  const { loadSampleTemplate, isLoading: isLoadingTemplate } =
+    useSampleTemplate();
 
   function handleNextFromInput() {
     try {
@@ -77,6 +83,7 @@ export default function App() {
           handleLoadTemplate={handleLoadTemplate}
           handleNextFromInput={handleNextFromInput}
           handleClearForm={handleClearForm}
+          isLoading={isLoadingTemplate}
           error={error}
         />
       )}
@@ -86,6 +93,7 @@ export default function App() {
           parsedASN={parsedASN}
           handleBack={handleBack}
           handleValidation={handleValidation}
+          isLoading={isLoadingValidation}
         />
       )}
 
