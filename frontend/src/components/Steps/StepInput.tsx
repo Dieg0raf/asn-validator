@@ -117,7 +117,9 @@ export function StepInput({
           Clear
         </button>
       </div>
-      {error && <div className="text-red-600 mt-2">{error}</div>}
+      {error && (
+        <pre className="text-red-600 mt-2 whitespace-pre-wrap">{error}</pre>
+      )}
     </div>
   );
 }
