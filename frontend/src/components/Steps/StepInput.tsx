@@ -59,7 +59,10 @@ export function StepInput({
               Loading...
             </span>
           ) : (
-            "Load Valid Sample"
+            <>
+              Load <span className="text-green-500 font-bold">Valid</span>{" "}
+              Sample
+            </>
           )}
         </button>
 
@@ -92,7 +95,10 @@ export function StepInput({
               Loading...
             </span>
           ) : (
-            "Load Invalid Sample"
+            <>
+              Load <span className="text-red-600 font-bold">Invalid</span>{" "}
+              Sample
+            </>
           )}
         </button>
 

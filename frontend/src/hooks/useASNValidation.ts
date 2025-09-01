@@ -37,7 +37,6 @@ export function useASNValidation() {
     function getErrorMessage(status: number, errorData: any): string {
         switch (status) {
             case 422:
-                console.log("Catching 422");
                 return extractValidationError(errorData);
             case 500:
                 return errorData.detail || 'Server error occurred';

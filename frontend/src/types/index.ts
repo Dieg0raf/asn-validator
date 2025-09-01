@@ -14,6 +14,7 @@ export interface ASNItem {
     description: string;
     quantity: number;
     upc: string;
+    po_number: string;
 }
 
 export interface Carton {
@@ -47,7 +48,6 @@ export interface ValidationError {
     message: string;
     rule: string;
     impact: string;
-    severity: string;
 }
 
 export interface ValidationResponse {
