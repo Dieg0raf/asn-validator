@@ -18,8 +18,6 @@ class DSGASNValidator:
         errors.extend(self._validate_dsg_carton_rules(asn))
         errors.extend(self._validate_dsg_labeling(asn))
         errors.extend(self._validate_dsg_tms_routing(asn))
-
-        print(f"errors: {errors}")
         
         is_valid = len(errors) == 0
         return is_valid, errors, warnings
