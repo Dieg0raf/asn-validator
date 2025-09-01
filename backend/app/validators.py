@@ -4,14 +4,12 @@ import re
 from .models import ASNRequest, ValidationError
 
 class DSGASNValidator:
-    """ASN validator based on DSG routing guide requirements"""
     
     def __init__(self):
         self.asn_timing_hours = 1  # 1 hour after shipment closes
         self.max_delivery_days = 30
         
     def validate_asn(self, asn: ASNRequest) -> Tuple[bool, List[ValidationError], List[ValidationError], List[ValidationError]]:
-        """Validate ASN against DSG requirements"""
         errors = []
         warnings = []
         
@@ -20,12 +18,14 @@ class DSGASNValidator:
         errors.extend(self._validate_dsg_carton_rules(asn))
         errors.extend(self._validate_dsg_labeling(asn))
         errors.extend(self._validate_dsg_tms_routing(asn))
+
+        print(f"errors: {errors}")
         
         is_valid = len(errors) == 0
         return is_valid, errors, warnings
     
     def _validate_dsg_timing(self, asn: ASNRequest) -> List[ValidationError]:
-        """DSG timing requirements: ASN within 1 hour of shipment close"""
+        """DSG timing requirements"""
         errors = []
         
         try:
@@ -54,11 +54,11 @@ class DSGASNValidator:
         return errors
     
     def _validate_dsg_carton_rules(self, asn: ASNRequest) -> List[ValidationError]:
-        """DSG carton requirements: one PO per carton, size limits"""
+        """DSG carton requirements - one PO per carton, size limits"""
         errors = []
         
         for i, carton in enumerate(asn.cartons):
-            # DSG requirement: One PO per carton
+            # one PO per carton
             po_numbers = set()
             for item in carton.items:
                 if hasattr(item, 'po_number'):
@@ -73,7 +73,7 @@ class DSGASNValidator:
                     severity="error"
                 ))
             
-            # DSG carton size requirements
+            # check carton size requirements
             length, width, height = carton.dimensions
             if length < 9 or width < 6 or height < 3:
                 errors.append(ValidationError(
@@ -102,7 +102,7 @@ class DSGASNValidator:
         for i, carton in enumerate(asn.cartons):
             label = carton.ucc128_label
             
-            # DSG requirement: SSCC must be GS1 compliant (start with 0)
+            # check SSCC is GS1 compliant
             if not label.sscc.startswith('0'):
                 errors.append(ValidationError(
                     field=f"cartons[{i}].ucc128_label.sscc",
@@ -112,7 +112,7 @@ class DSGASNValidator:
                     severity="error"
                 ))
             
-            # DSG requirement: UCC-128 label must contain all required fields
+            # required fields for UCC-128 label
             required_fields = ['department_number', 'vendor_name', 'dsg_dc_name', 
                              'po_number', 'sort_letter', 'upc', 'dc_store_number']
             
@@ -131,10 +131,9 @@ class DSGASNValidator:
     def _validate_dsg_tms_routing(self, asn: ASNRequest) -> List[ValidationError]:
         """DSG TMS routing requirements"""
         errors = []
-        
         tms = asn.tms_routing
         
-        # DSG requirement: TMS Shipment ID must be on BOL
+        # TMS Shipment ID must be on BOL
         if not tms.shipment_id:
             errors.append(ValidationError(
                 field="tms_routing.shipment_id",
@@ -144,7 +143,7 @@ class DSGASNValidator:
                 severity="error"
             ))
         
-        # DSG requirement: Accurate metrics required
+        # check that sizes match
         if tms.cartons != len(asn.cartons):
             errors.append(ValidationError(
                 field="tms_routing.cartons",

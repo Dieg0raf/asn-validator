@@ -5,6 +5,7 @@ from .validators import DSGASNValidator
 import logging
 from datetime import datetime
 
+# TODO: Remove logging
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -26,6 +27,7 @@ app.add_middleware(
 validator = DSGASNValidator()
 
 
+# TODO: Remove comments
 @app.post("/validate-asn", response_model=ValidationResponse)
 async def validate_asn(asn_data: ASNRequest):
     """
@@ -41,9 +43,9 @@ async def validate_asn(asn_data: ASNRequest):
     """
     try:
         logger.info(f"Validating ASN for vendor {asn_data.vendor_id}")
-        
+
         # does validation (on valid ASNRequest obj)
-        is_valid, errors, warnings, info = validator.validate_asn(asn_data)
+        is_valid, errors, warnings= validator.validate_asn(asn_data)
         
         compliance_summary = {
             "total_cartons": len(asn_data.cartons),
@@ -54,14 +56,12 @@ async def validate_asn(asn_data: ASNRequest):
             "total_weight": sum(carton.weight for carton in asn_data.cartons),
             "validation_errors": len(errors),
             "validation_warnings": len(warnings),
-            "validation_info": len(info)
         }
         
         response = ValidationResponse(
             valid=is_valid,
             errors=errors,
             warnings=warnings,
-            info=info,
             timestamp=datetime.now(),
             compliance_summary=compliance_summary
         )
@@ -79,7 +79,6 @@ async def validate_asn(asn_data: ASNRequest):
 
 @app.get("/sample-asn")
 async def get_sample_asn():
-    """Get a realistic sample ASN based on DSG actual requirements"""
     return {
         "message": "Sample ASN template based on DSG requirements",
         "template": {

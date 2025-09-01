@@ -4,7 +4,6 @@ from datetime import datetime
 import re
 
 class UCC128Label(BaseModel):
-    """UCC-128 label requirements from DSG guide"""
     sscc: str = Field(..., pattern=r"^\d{18}$", description="18-digit SSCC")
     department_number: str = Field(..., description="Department number")
     vendor_name: str = Field(..., description="Vendor name")
@@ -21,7 +20,6 @@ class UCC128Label(BaseModel):
         return v
 
 class Carton(BaseModel):
-    """Carton requirements from DSG guide"""
     ucc128_label: UCC128Label = Field(..., description="UCC-128 label")
     po_number: str = Field(..., description="PO number")
     items: List['Item'] = Field(..., min_items=1, description="Items in carton")
@@ -52,7 +50,6 @@ class Carton(BaseModel):
         return v
 
 class Item(BaseModel):
-    """Item requirements from DSG guide"""
     sku: str = Field(..., description="SKU")
     description: str = Field(..., description="Item description")
     quantity: int = Field(..., gt=0, description="Quantity")
@@ -65,7 +62,6 @@ class Item(BaseModel):
         return v
 
 class TMSRouting(BaseModel):
-    """TMS routing requirements from DSG guide"""
     shipment_id: str = Field(..., description="TMS Shipment ID")
     ready_date: str = Field(..., description="Ready date")
     cartons: int = Field(..., gt=0, description="Number of cartons")
@@ -80,7 +76,6 @@ class TMSRouting(BaseModel):
         return v
 
 class ASNRequest(BaseModel):
-    """ASN structure based on DSG requirements"""
     vendor_id: str = Field(..., description="Vendor ID")
     ship_date: str = Field(..., description="Ship date")
     expected_delivery: str = Field(..., description="Expected delivery")
@@ -102,7 +97,6 @@ class ASNRequest(BaseModel):
         return v
 
 class ValidationError(BaseModel):
-    """Validation error with DSG-specific impact"""
     field: str = Field(..., description="Field name")
     message: str = Field(..., description="Error message")
     rule: str = Field(..., description="Validation rule")
@@ -110,10 +104,8 @@ class ValidationError(BaseModel):
     severity: str = Field(..., description="Error severity")
 
 class ValidationResponse(BaseModel):
-    """Validation response with DSG compliance status"""
     valid: bool = Field(..., description="Validation result")
     errors: List[ValidationError] = Field(default_factory=list)
     warnings: List[ValidationError] = Field(default_factory=list)
-    info: List[ValidationError] = Field(default_factory=list)
     timestamp: datetime = Field(default_factory=datetime.now)
     compliance_summary: dict = Field(default_factory=dict)
