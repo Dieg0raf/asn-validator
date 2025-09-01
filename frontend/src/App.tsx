@@ -26,7 +26,6 @@ export default function App() {
 
     try {
       const result = await validateASN(asnData);
-      console.log(result);
       if (result) {
         setValidationResult(result);
       }

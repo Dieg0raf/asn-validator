@@ -1,131 +1,157 @@
-from typing import List, Tuple
-from datetime import datetime
+from typing import List, Tuple, Dict
+from datetime import datetime, timedelta
 import re
 from .models import ASNRequest, ValidationError
 
-class ASNValidator:
-    def __init__(self):
-        self.valid_warehouse_codes = {"PA1", "PA2", "CA1", "TX1", "GA1", "OH1", "IL1", "NY1"} # DC where DSG receives shipments
-        self.valid_shipping_carriers = {"FEDEX", "UPS", "USPS", "DHL", "ESTES", "YRC", "ABF", "SAIA"} # Shipping companies
-        self.po_number_pattern = r"^DSG-\d{4}-\d{6}$" # DSG-YYYY-XXXXXX format
-        self.tms_shipment_pattern = r"^CS\d{8}$"  # CSxxxxxxxx format (CS - Carrier System) - links physical shipment to electronic document
+class DSGASNValidator:
+    """ASN validator based on DSG routing guide requirements"""
     
-    def validate_asn(self, asn: ASNRequest) -> Tuple[bool, List[ValidationError], List[ValidationError]]:
+    def __init__(self):
+        self.asn_timing_hours = 1  # 1 hour after shipment closes
+        self.max_delivery_days = 30
+        
+    def validate_asn(self, asn: ASNRequest) -> Tuple[bool, List[ValidationError], List[ValidationError], List[ValidationError]]:
+        """Validate ASN against DSG requirements"""
         errors = []
         warnings = []
         
-        errors.extend(self._validate_timing(asn))                      # Rule 1: validate timing
-        errors.extend(self._validate_data_integrity(asn))              # Rule 2: validate data format  
-        errors.extend(self._validate_cross_document_consistency(asn))  # Rule 3: validate cross-document
+        # validation rules
+        errors.extend(self._validate_dsg_timing(asn))
+        errors.extend(self._validate_dsg_carton_rules(asn))
+        errors.extend(self._validate_dsg_labeling(asn))
+        errors.extend(self._validate_dsg_tms_routing(asn))
         
         is_valid = len(errors) == 0
         return is_valid, errors, warnings
     
-    def _validate_timing(self, asn: ASNRequest) -> List[ValidationError]:
-        """Rule 1: Timing Validation - $250 chargeback for late ASNs"""
+    def _validate_dsg_timing(self, asn: ASNRequest) -> List[ValidationError]:
+        """DSG timing requirements: ASN within 1 hour of shipment close"""
         errors = []
         
         try:
             ship_date = datetime.strptime(asn.ship_date, "%Y-%m-%d")
-            expected_delivery = datetime.strptime(asn.expected_delivery, "%Y-%m-%d")
-
-            # ship date cannot be in the past (ASN must be sent within 1 hour)
-            if ship_date.date() < datetime.now().date():
+            current_date = datetime.now().date()
+            
+            # check ASN is 1 hour after shipment closes
+            if ship_date.date() < current_date:
                 errors.append(ValidationError(
                     field="ship_date",
-                    message="Ship date cannot be in the past - ASN must be sent within 1 hour of departure",
-                    rule="timing_validation",
-                    impact="$250 chargeback per shipment"
+                    message="DSG requirement: ASN must be sent within 1 hour after shipment closes",
+                    rule="dsg_timing_requirement",
+                    impact="ASN rejection + potential chargeback",
+                    severity="error"
                 ))
-            
-            
-            # expected delivery must be after ship date
-            if expected_delivery <= ship_date:
-                errors.append(ValidationError(
-                    field="expected_delivery", 
-                    message="Expected delivery must be after ship date",
-                    rule="timing_validation",
-                    impact="$250 chargeback per shipment"
-                ))
-            print(f"2nd check: {errors}")
                 
         except ValueError:
-            print("In here")
             errors.append(ValidationError(
                 field="dates",
                 message="Dates must be in YYYY-MM-DD format",
-                rule="timing_validation", 
-                impact="$250 chargeback per shipment"
+                rule="date_format",
+                impact="ASN rejection",
+                severity="error"
             ))
         
         return errors
     
-    def _validate_data_integrity(self, asn: ASNRequest) -> List[ValidationError]:
-        """
-        Rule 2: Data Integrity - $7.50 per carton + $250 service fee
-            - Validate data format
-        """
+    def _validate_dsg_carton_rules(self, asn: ASNRequest) -> List[ValidationError]:
+        """DSG carton requirements: one PO per carton, size limits"""
         errors = []
         
-        # validate PO number format
-        if not re.match(self.po_number_pattern, asn.po_number):
-            errors.append(ValidationError(
-                field="po_number",
-                message="PO number must match format: DSG-YYYY-XXXXXX (e.g., DSG-2024-001234)",
-                rule="data_integrity",
-                impact="$7.50 per carton + $250 service fee"
-            ))
-        
-        # validate warehouse code
-        if asn.warehouse_code not in self.valid_warehouse_codes:
-            errors.append(ValidationError(
-                field="warehouse_code",
-                message=f"Invalid warehouse code. Must be one of: {', '.join(sorted(self.valid_warehouse_codes))}",
-                rule="data_integrity",
-                impact="$7.50 per carton + $250 service fee"
-            ))
-        
-        # validate items have positive quantities
-        for i, item in enumerate(asn.items):
-            if item.quantity <= 0:
+        for i, carton in enumerate(asn.cartons):
+            # DSG requirement: One PO per carton
+            po_numbers = set()
+            for item in carton.items:
+                if hasattr(item, 'po_number'):
+                    po_numbers.add(item.po_number)
+            
+            if len(po_numbers) > 1:
                 errors.append(ValidationError(
-                    field=f"items[{i}].quantity",
-                    message="Item quantity must be greater than 0",
-                    rule="data_integrity",
-                    impact="$7.50 per carton + $250 service fee"
+                    field=f"cartons[{i}].po_numbers",
+                    message="DSG requirement: Cartons must contain merchandise for only one purchase order",
+                    rule="dsg_one_po_per_carton",
+                    impact="Carton rejection + processing delays",
+                    severity="error"
+                ))
+            
+            # DSG carton size requirements
+            length, width, height = carton.dimensions
+            if length < 9 or width < 6 or height < 3:
+                errors.append(ValidationError(
+                    field=f"cartons[{i}].dimensions",
+                    message="DSG requirement: Carton too small. Minimum: 9x6x3 inches",
+                    rule="dsg_carton_size_minimum",
+                    impact="Carton rejection + handling delays",
+                    severity="error"
+                ))
+            
+            if length > 48 or width > 30 or height > 30:
+                errors.append(ValidationError(
+                    field=f"cartons[{i}].dimensions",
+                    message="DSG requirement: Carton too large. Maximum: 48x30x30 inches",
+                    rule="dsg_carton_size_maximum",
+                    impact="Carton rejection + handling delays",
+                    severity="error"
                 ))
         
         return errors
     
-    def _validate_cross_document_consistency(self, asn: ASNRequest) -> List[ValidationError]:
-        """Rule 3: cross-document consistency - $500 per shipment"""
+    def _validate_dsg_labeling(self, asn: ASNRequest) -> List[ValidationError]:
+        """DSG UCC-128 labeling requirements"""
         errors = []
         
-        # validate TMS Shipment ID format
-        if not re.match(self.tms_shipment_pattern, asn.tms_shipment_id):
+        for i, carton in enumerate(asn.cartons):
+            label = carton.ucc128_label
+            
+            # DSG requirement: SSCC must be GS1 compliant (start with 0)
+            if not label.sscc.startswith('0'):
+                errors.append(ValidationError(
+                    field=f"cartons[{i}].ucc128_label.sscc",
+                    message="DSG requirement: SSCC must start with 0 (GS1 compliant)",
+                    rule="dsg_gs1_sscc_requirement",
+                    impact="Label rejection + processing delays",
+                    severity="error"
+                ))
+            
+            # DSG requirement: UCC-128 label must contain all required fields
+            required_fields = ['department_number', 'vendor_name', 'dsg_dc_name', 
+                             'po_number', 'sort_letter', 'upc', 'dc_store_number']
+            
+            for field in required_fields:
+                if not getattr(label, field, None):
+                    errors.append(ValidationError(
+                        field=f"cartons[{i}].ucc128_label.{field}",
+                        message=f"DSG requirement: UCC-128 label must contain {field}",
+                        rule="dsg_label_completeness",
+                        impact="Label rejection + processing delays",
+                        severity="error"
+                    ))
+        
+        return errors
+    
+    def _validate_dsg_tms_routing(self, asn: ASNRequest) -> List[ValidationError]:
+        """DSG TMS routing requirements"""
+        errors = []
+        
+        tms = asn.tms_routing
+        
+        # DSG requirement: TMS Shipment ID must be on BOL
+        if not tms.shipment_id:
             errors.append(ValidationError(
-                field="tms_shipment_id",
-                message="TMS Shipment ID must match format: CSxxxxxxxx (8 digits)",
-                rule="cross_document_consistency",
-                impact="$500 flat fee per shipment"
+                field="tms_routing.shipment_id",
+                message="DSG requirement: TMS Shipment ID must be listed on BOL (first page, CID field)",
+                rule="dsg_tms_bol_requirement",
+                impact="Shipment rejection + routing delays",
+                severity="error"
             ))
         
-        # validate shipping carrier
-        if asn.carrier.upper() not in self.valid_shipping_carriers:
+        # DSG requirement: Accurate metrics required
+        if tms.cartons != len(asn.cartons):
             errors.append(ValidationError(
-                field="carrier",
-                message=f"Invalid carrier. Must be one of: {', '.join(sorted(self.valid_shipping_carriers))}",
-                rule="cross_document_consistency",
-                impact="$500 flat fee per shipment"
-            ))
-        
-        # validate tracking number if provided
-        if asn.tracking_number and len(asn.tracking_number) < 10:
-            errors.append(ValidationError(
-                field="tracking_number",
-                message="Tracking number must be at least 10 characters long",
-                rule="cross_document_consistency",
-                impact="$500 flat fee per shipment"
+                field="tms_routing.cartons",
+                message="DSG requirement: TMS carton count must match actual carton count",
+                rule="dsg_tms_accuracy",
+                impact="Routing delays + processing issues",
+                severity="error"
             ))
         
         return errors

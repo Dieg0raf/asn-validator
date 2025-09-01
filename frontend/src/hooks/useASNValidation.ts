@@ -8,39 +8,67 @@ export function useASNValidation() {
     async function validateASN(asnData: string): Promise<ValidationResponse | null> {
         try {
             setIsLoading(true);
-            setError(''); // clear previous errors
+            setError('');
 
             const parsedData: ASNRequest = JSON.parse(asnData);
-
-            // call validation endpoint on backend
-            const response = await fetch('http://localhost:8000/validate-asn', {
+            const response = await fetch('http://localhost:8000/validate-asn', { // send validation request
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(parsedData),
             });
 
-            // check response
             if (response.ok) {
                 return await response.json();
-            } else {
-                const errorData = await response.json();
-                console.log(errorData);
-                const errorMessage = errorData.detail || 'Validation failed';
-                setError(errorMessage);
-                return null;
             }
 
-        } catch (err) {
-            // check caught error
-            if (err instanceof SyntaxError) {
-                const errorMessage = 'Invalid JSON format. Please check your input.';
-                setError(errorMessage);
-                return null;
-            }
+            const errorData = await response.json();
+            const errorMessage = getErrorMessage(response.status, errorData);
+
+            setError(errorMessage);
             return null;
+
+        } catch (err) {
+            // different types of errors
+            const errorMessage = getErrorFromException(err);
+            setError(errorMessage);
+            return null;
+
         } finally {
             setIsLoading(false);
         }
+    }
+
+    function getErrorMessage(status: number, errorData: any): string {
+        switch (status) {
+            case 422:
+                return extractValidationError(errorData);
+            case 500:
+                return errorData.detail || 'Server error occurred';
+            default:
+                return errorData.detail || 'Validation failed';
+        }
+    }
+
+    function extractValidationError(errorData: any): string {
+        const validationErrors = errorData.detail;
+
+        if (!Array.isArray(validationErrors) || validationErrors.length === 0) {
+            return 'Data validation failed';
+        }
+
+        const firstError = validationErrors[0];
+        const fieldPath = firstError.loc.slice(1).join('.'); // remove 'body' from path
+        return `${fieldPath}: ${firstError.msg}`;
+    }
+
+    function getErrorFromException(err: any): string {
+        if (err instanceof SyntaxError) {
+            return 'Invalid JSON format. Please check your input.';
+        }
+        if (err instanceof Error) {
+            return err.message;
+        }
+        return 'An unexpected error occurred';
     }
 
     function clearError(message?: string) {
