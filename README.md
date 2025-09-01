@@ -47,6 +47,7 @@ The frontend will be available at http://localhost:3000
 - You can paste your own ASN JSON into the app for validation.
   - **Note:** Your JSON must follow the required ASN schema/format (see sample templates in the UI for reference).
 - The UI also provides sample "valid" and "invalid" ASN templates for quick testing.
+  - **Note:** Since the selection is randomized, you may need to click "Load Invalid Sample" or "Load Valid Sample" more than once to see a different one each time.
 
 ---
 
