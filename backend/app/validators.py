@@ -105,7 +105,6 @@ class DSGASNValidator:
                     impact="Carton rejection + handling delays",
                     severity="error"
                 ))
-        print("at the end")
         return errors
     
     def _validate_dsg_labeling(self, asn: ASNRequest) -> List[ValidationError]:
