@@ -4,10 +4,6 @@ import re
 from .models import ASNRequest, ValidationError
 
 class DSGASNValidator:
-    
-    def __init__(self):
-        self.asn_timing_hours = 1  # 1 hour after shipment closes
-        self.max_delivery_days = 30
         
     def validate_asn(self, asn: ASNRequest) -> Tuple[bool, List[ValidationError], List[ValidationError], List[ValidationError]]:
         errors = []
@@ -27,10 +23,11 @@ class DSGASNValidator:
         
         try:
             ship_date = datetime.strptime(asn.ship_date, "%Y-%m-%d")
-            current_date = datetime.now().date()
-            
+            asn_submission_time = datetime.now()
+            time_difference = asn_submission_time - ship_date
+
             # check ASN is 1 hour after shipment closes
-            if ship_date.date() < current_date:
+            if time_difference.total_seconds() > 3600:
                 errors.append(ValidationError(
                     field="ship_date",
                     message="DSG requirement: ASN must be sent within 1 hour after shipment closes",
@@ -55,7 +52,8 @@ class DSGASNValidator:
         errors = []
         
         for i, carton in enumerate(asn.cartons):
-            # one PO per carton
+
+            # check for multiple PO numbers
             po_numbers = set()
             for item in carton.items:
                 if hasattr(item, 'po_number'):
@@ -69,7 +67,25 @@ class DSGASNValidator:
                     impact="Carton rejection + processing delays",
                     severity="error"
                 ))
-            
+
+            # check carton weight
+            if carton.weight < 3:
+                errors.append(ValidationError(
+                    field=f"cartons[{i}].weight",
+                    message="DSG requirement: Carton too light. Minimum: 3 lbs",
+                    rule="dsg_carton_weight_minimum",
+                    impact="Carton rejection + processing delays",
+                    severity="error"
+                ))
+            if carton.weight > 50:
+                errors.append(ValidationError(
+                    field=f"cartons[{i}].weight",
+                    message="DSG requirement: Carton too heavy. Maximum: 50 lbs",
+                    rule="dsg_carton_weight_maximum",
+                    impact="Carton rejection + processing delays",
+                    severity="error"
+                ))
+
             # check carton size requirements
             length, width, height = carton.dimensions
             if length < 9 or width < 6 or height < 3:
@@ -89,7 +105,6 @@ class DSGASNValidator:
                     impact="Carton rejection + handling delays",
                     severity="error"
                 ))
-        
         return errors
     
     def _validate_dsg_labeling(self, asn: ASNRequest) -> List[ValidationError]:
@@ -108,20 +123,6 @@ class DSGASNValidator:
                     impact="Label rejection + processing delays",
                     severity="error"
                 ))
-            
-            # required fields for UCC-128 label
-            required_fields = ['department_number', 'vendor_name', 'dsg_dc_name', 
-                             'po_number', 'sort_letter', 'upc', 'dc_store_number']
-            
-            for field in required_fields:
-                if not getattr(label, field, None):
-                    errors.append(ValidationError(
-                        field=f"cartons[{i}].ucc128_label.{field}",
-                        message=f"DSG requirement: UCC-128 label must contain {field}",
-                        rule="dsg_label_completeness",
-                        impact="Label rejection + processing delays",
-                        severity="error"
-                    ))
         
         return errors
     
@@ -129,16 +130,6 @@ class DSGASNValidator:
         """DSG TMS routing requirements"""
         errors = []
         tms = asn.tms_routing
-        
-        # TMS Shipment ID must be on BOL
-        if not tms.shipment_id:
-            errors.append(ValidationError(
-                field="tms_routing.shipment_id",
-                message="DSG requirement: TMS Shipment ID must be listed on BOL (first page, CID field)",
-                rule="dsg_tms_bol_requirement",
-                impact="Shipment rejection + routing delays",
-                severity="error"
-            ))
         
         # check that sizes match
         if tms.cartons != len(asn.cartons):
