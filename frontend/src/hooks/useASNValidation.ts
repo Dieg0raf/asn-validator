@@ -10,8 +10,9 @@ export function useASNValidation() {
             setIsLoading(true);
             setError('');
 
+            // send validation request
             const parsedData: ASNRequest = JSON.parse(asnData);
-            const response = await fetch('http://localhost:8000/validate-asn', { // send validation request
+            const response = await fetch('http://localhost:8000/validate-asn', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(parsedData),

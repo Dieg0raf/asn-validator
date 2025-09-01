@@ -5,7 +5,7 @@ import { Header } from "./components/Header";
 import { ControlPanel } from "./components/ControlPanel";
 import { ASNInput } from "./components/ASNInput";
 import { ValidationButton } from "./components/ValidationButton";
-import { ValidationResults } from "./components/ValidationResults";
+import { ValidationReport } from "./components/ValidationReport/ValidationReport";
 import { ErrorDisplay } from "./components/ErrorDisplay";
 import { useASNValidation } from "./hooks/useASNValidation";
 import { useSampleTemplate } from "./hooks/useSampleTemplate";
@@ -25,9 +25,9 @@ export default function App() {
     }
 
     try {
-      const result = await validateASN(asnData);
-      if (result) {
-        setValidationResult(result);
+      const validationResult = await validateASN(asnData);
+      if (validationResult) {
+        setValidationResult(validationResult);
       }
     } catch (err) {
       console.log("Unexpected error: ", error);
@@ -70,7 +70,7 @@ export default function App() {
 
         <ErrorDisplay error={error} />
 
-        {validationResult && <ValidationResults result={validationResult} />}
+        {validationResult && <ValidationReport data={validationResult} />}
       </main>
     </div>
   );
