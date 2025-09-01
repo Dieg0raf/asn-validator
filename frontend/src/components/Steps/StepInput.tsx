@@ -5,6 +5,7 @@ interface StepInputProps {
   setAsnData: (data: string) => void;
   handleLoadTemplate: () => void;
   handleNextFromInput: () => void;
+  handleClearForm: () => void;
   error: string | null;
 }
 
@@ -13,6 +14,7 @@ export function StepInput({
   setAsnData,
   handleLoadTemplate,
   handleNextFromInput,
+  handleClearForm,
   error,
 }: StepInputProps) {
   return (
@@ -24,6 +26,9 @@ export function StepInput({
       <div className="flex gap-2 mt-4">
         <button className="btn" onClick={handleLoadTemplate}>
           Load Sample
+        </button>
+        <button className="btn" onClick={handleClearForm}>
+          Clear
         </button>
         <button className="btn btn-primary" onClick={handleNextFromInput}>
           Next: Preview

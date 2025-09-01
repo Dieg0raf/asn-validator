@@ -63,6 +63,7 @@ export default function App() {
   function handleClearForm() {
     setAsnData("");
     setValidationResult(null);
+    setParsedASN(null);
     clearError();
   }
 
@@ -75,6 +76,7 @@ export default function App() {
           setAsnData={setAsnData}
           handleLoadTemplate={handleLoadTemplate}
           handleNextFromInput={handleNextFromInput}
+          handleClearForm={handleClearForm}
           error={error}
         />
       )}
