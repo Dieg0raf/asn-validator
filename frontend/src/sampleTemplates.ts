@@ -249,7 +249,7 @@ export const invalidSampleTemplates = [
         vendor_id: "V12346",
         ship_date: "2025-01-15", // old date
         expected_delivery: "2025-01-20",
-        warehouse_code: "PA1",
+        warehouse_code: "CA2", // invalid warehouse code
         tms_routing: {
             shipment_id: "TMS12345679",
             ready_date: "2025-01-15",

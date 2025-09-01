@@ -25,14 +25,11 @@ validator = DSGASNValidator()
 async def validate_asn(asn_data: ASNRequest):
     """
     Validate an Advance Ship Notice against DSG compliance rules
-    
-    This endpoint validates ASN data against business rules from the DSG
-    Vendor Routing Guide, including:
-    - ASN timing requirements (within 1 hour of shipment close)
-    - Carton requirements (one PO per carton, size limits)
-    - UCC-128 labeling requirements (GS1 compliant SSCC (Serial Shipping Container Code))
-    - TMS routing requirements (shipment ID)
-    - Business rule validation (warehouse codes, PO formats)
+        - ASN timing requirements (within 1 hour of shipment close)
+        - Carton requirements (one PO per carton, size limits)
+        - UCC-128 labeling requirements (GS1 compliant SSCC)
+        - TMS routing requirements (shipment ID)
+        - Business rule validation (warehouse codes, PO formats)
     """
     try:
 

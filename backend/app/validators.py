@@ -30,7 +30,7 @@ class DSGASNValidator:
             if time_difference.total_seconds() > 3600:
                 errors.append(ValidationError(
                     field="ship_date",
-                    message="DSG requirement: ASN must be sent within 1 hour after shipment closes",
+                    message="ASN must be sent within 1 hour after shipment closes",
                     rule="dsg_timing_requirement",
                     impact="ASN rejection + potential chargeback",
                     severity="error"
@@ -48,7 +48,7 @@ class DSGASNValidator:
         return errors
     
     def _validate_dsg_carton_rules(self, asn: ASNRequest) -> List[ValidationError]:
-        """DSG carton requirements - one PO per carton, size limits"""
+        """DSG carton requirements"""
         errors = []
         
         for i, carton in enumerate(asn.cartons):
@@ -62,7 +62,7 @@ class DSGASNValidator:
             if len(po_numbers) > 1:
                 errors.append(ValidationError(
                     field=f"cartons[{i}].po_numbers",
-                    message="DSG requirement: Cartons must contain merchandise for only one purchase order",
+                    message="Cartons must contain merchandise for only one purchase order",
                     rule="dsg_one_po_per_carton",
                     impact="Carton rejection + processing delays",
                     severity="error"
@@ -72,7 +72,7 @@ class DSGASNValidator:
             if carton.weight < 3:
                 errors.append(ValidationError(
                     field=f"cartons[{i}].weight",
-                    message="DSG requirement: Carton too light. Minimum: 3 lbs",
+                    message="Carton too light. Minimum: 3 lbs",
                     rule="dsg_carton_weight_minimum",
                     impact="Carton rejection + processing delays",
                     severity="error"
@@ -80,7 +80,7 @@ class DSGASNValidator:
             if carton.weight > 50:
                 errors.append(ValidationError(
                     field=f"cartons[{i}].weight",
-                    message="DSG requirement: Carton too heavy. Maximum: 50 lbs",
+                    message="Carton too heavy. Maximum: 50 lbs",
                     rule="dsg_carton_weight_maximum",
                     impact="Carton rejection + processing delays",
                     severity="error"
@@ -91,7 +91,7 @@ class DSGASNValidator:
             if length < 9 or width < 6 or height < 3:
                 errors.append(ValidationError(
                     field=f"cartons[{i}].dimensions",
-                    message="DSG requirement: Carton too small. Minimum: 9x6x3 inches",
+                    message="Carton too small. Minimum: 9x6x3 inches",
                     rule="dsg_carton_size_minimum",
                     impact="Carton rejection + handling delays",
                     severity="error"
@@ -100,7 +100,7 @@ class DSGASNValidator:
             if length > 48 or width > 30 or height > 30:
                 errors.append(ValidationError(
                     field=f"cartons[{i}].dimensions",
-                    message="DSG requirement: Carton too large. Maximum: 48x30x30 inches",
+                    message="Carton too large. Maximum: 48x30x30 inches",
                     rule="dsg_carton_size_maximum",
                     impact="Carton rejection + handling delays",
                     severity="error"
@@ -118,7 +118,7 @@ class DSGASNValidator:
             if not label.sscc.startswith('0'):
                 errors.append(ValidationError(
                     field=f"cartons[{i}].ucc128_label.sscc",
-                    message="DSG requirement: SSCC must start with 0 (GS1 compliant)",
+                    message="SSCC must start with 0 (GS1 compliant)",
                     rule="dsg_gs1_sscc_requirement",
                     impact="Label rejection + processing delays",
                     severity="error"
@@ -135,7 +135,7 @@ class DSGASNValidator:
         if tms.cartons != len(asn.cartons):
             errors.append(ValidationError(
                 field="tms_routing.cartons",
-                message="DSG requirement: TMS carton count must match actual carton count",
+                message="TMS carton count must match actual carton count",
                 rule="dsg_tms_accuracy",
                 impact="Routing delays + processing issues",
                 severity="error"
