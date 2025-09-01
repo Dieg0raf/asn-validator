@@ -2,13 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from .models import ASNRequest, ValidationResponse, ValidationError
 from .validators import DSGASNValidator
-import logging
 from datetime import datetime
-
-# TODO: Remove logging
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="DSG ASN Validator API",
@@ -27,7 +21,6 @@ app.add_middleware(
 validator = DSGASNValidator()
 
 
-# TODO: Remove comments
 @app.post("/validate-asn", response_model=ValidationResponse)
 async def validate_asn(asn_data: ASNRequest):
     """
@@ -38,11 +31,10 @@ async def validate_asn(asn_data: ASNRequest):
     - ASN timing requirements (within 1 hour of shipment close)
     - Carton requirements (one PO per carton, size limits)
     - UCC-128 labeling requirements (GS1 compliant SSCC (Serial Shipping Container Code))
-    - TMS routing requirements (shipment ID on BOL)
+    - TMS routing requirements (shipment ID)
     - Business rule validation (warehouse codes, PO formats)
     """
     try:
-        logger.info(f"Validating ASN for vendor {asn_data.vendor_id}")
 
         # does validation (on valid ASNRequest obj)
         is_valid, errors = validator.validate_asn(asn_data)
@@ -64,59 +56,10 @@ async def validate_asn(asn_data: ASNRequest):
             compliance_summary=compliance_summary
         )
 
-        logger.info(f"ASN validation completed. Valid: {is_valid}, Errors: {len(errors)}")
-
         return response
         
     except Exception as e:
-        logger.error(f"Error during ASN validation: {str(e)}")
         raise HTTPException(
             status_code=500,
             detail=f"Internal server error during validation: {str(e)}"
         )
-
-@app.get("/sample-asn")
-async def get_sample_asn():
-    return {
-        "message": "Sample ASN template based on DSG requirements",
-        "template": {
-            "vendor_id": "V12345",
-            "ship_date": "2024-12-20",
-            "expected_delivery": "2024-12-25",
-            "warehouse_code": "PA1",
-            "tms_routing": {
-                "shipment_id": "TMS12345678",
-                "ready_date": "2024-12-20",
-                "cartons": 2,
-                "cube": 15.5,
-                "pallets": 1,
-                "weight": 45.2
-            },
-            "cartons": [
-                {
-                    "ucc128_label": {
-                        "sscc": "000123456789012345",
-                        "department_number": "10 - Athletic Apparel",
-                        "vendor_name": "Vendor Name, 123 Vendor St, City, ST 12345",
-                        "dsg_dc_name": "DSG - PA1, 456 DC St, City, PA 12345",
-                        "po_number": "DSG-2024-001234",
-                        "sort_letter": "A",
-                        "upc": "ITEM001",
-                        "dc_store_number": "PA1"
-                    },
-                    "po_number": "DSG-2024-001234",
-                    "items": [
-                        {
-                            "sku": "ITEM001",
-                            "description": "Basketball Jersey",
-                            "quantity": 100,
-                            "upc": "123456789012"
-                        }
-                    ],
-                    "weight": 25.1,
-                    "dimensions": [24, 18, 12]
-                }
-            ]
-        },
-        "notes": "This template follows DSG actual requirements: UCC-128 labels, TMS routing, carton specifications"
-    }

@@ -4,7 +4,7 @@ from datetime import datetime
 import re
 
 class UCC128Label(BaseModel):
-    sscc: str = Field(..., pattern=r"^\d{18}$", description="18-digit SSCC")
+    sscc: str = Field(...,  description="18-digit SSCC")
     department_number: str = Field(..., description="Department number")
     vendor_name: str = Field(..., description="Vendor name")
     dsg_dc_name: str = Field(..., description="DSG DC name")
@@ -15,6 +15,9 @@ class UCC128Label(BaseModel):
     
     @validator('sscc')
     def validate_sscc(cls, v):
+        if len(v) != 18:
+            raise ValueError('SSCC must be 18 digits long')
+
         if not v.startswith('0'):
             raise ValueError('SSCC must start with 0 (GS1 prefix)')
         return v
@@ -31,30 +34,20 @@ class Carton(BaseModel):
         if not re.match(r"^DSG-\d{4}-\d{6}$", v):
             raise ValueError('PO number must match DSG format: DSG-YYYY-XXXXXX')
         return v
-    
-    @validator('dimensions')
-    def validate_carton_size(cls, v):
-        length, width, height = v
-        if length < 9 or width < 6 or height < 3:
-            raise ValueError('Carton too small. Minimum: 9x6x3 inches')
-        if length > 48 or width > 30 or height > 30:
-            raise ValueError('Carton too large. Maximum: 48x30x30 inches')
-        return v
-    
-    @validator('weight')
-    def validate_carton_weight(cls, v):
-        if v < 3:
-            raise ValueError('Carton too light. Minimum: 3 lbs')
-        if v > 50:
-            raise ValueError('Carton too heavy. Maximum: 50 lbs')
-        return v
 
 class Item(BaseModel):
     sku: str = Field(..., description="SKU")
     description: str = Field(..., description="Item description")
     quantity: int = Field(..., gt=0, description="Quantity")
     upc: str = Field(..., description="UPC")
-    
+    po_number: str = Field(..., description="PO number")
+
+    @validator('po_number')
+    def validate_po_number(cls, v):
+        if not re.match(r"^DSG-\d{4}-\d{6}$", v):
+            raise ValueError('PO number must match DSG format: DSG-YYYY-XXXXXX')
+        return v
+
     @validator('upc')
     def validate_upc(cls, v):
         if not re.match(r'^\d{12,13}$', v):
